@@ -572,7 +572,7 @@ Sqlite & Sqlite::operator>>(int64_t &i) {
  DBG(3)
   DOUT() << "integer read from column " << ci_
          << ", tr/rc: " << ts_ << '/' << rc_ << std::endl;
- ci_ = ++ci_ % cc_;
+ ci_ = (ci_+1) % cc_;
  return *this;
 }
 
@@ -587,7 +587,7 @@ Sqlite & Sqlite::operator>>(double &d) {
  DBG(3)
   DOUT() << "real read from column " << ci_
          << ", tr/rc: " << ts_ << '/' << rc_ << std::endl;
- ci_ = ++ci_ % cc_;
+ ci_ = (ci_+1) % cc_;
  return *this;
 }
 
@@ -603,7 +603,7 @@ Sqlite & Sqlite::operator>>(std::string &str) {
  DBG(3)
   DOUT() << "text read from column " << ci_
          << ", tr/rc: " << ts_ << '/' << rc_ << std::endl;
- ci_ = ++ci_ % cc_;
+ ci_ = (ci_+1) % cc_;
  return *this;
 }
 
@@ -619,7 +619,7 @@ Sqlite & Sqlite::operator>>(class Blob &blob) {
  DBG(3)
   DOUT() << "blob read from column " << ci_
          << ", tr/rc: " << ts_ <<'/'<< rc_ << std::endl;
- ci_ = ++ci_ % cc_;
+ ci_ = (ci_+1) % cc_;
  return *this;
 }
 

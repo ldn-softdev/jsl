@@ -318,7 +318,7 @@ string value_placeholders(SharedResource &r) {
  REVEAL(r, table_info, autokeys, ignored, DBG())
 
  string str;
- for(int i=0; i<table_info.size() - autokeys - ignored.size(); ++i)
+ for(size_t i=0; i<table_info.size() - autokeys - ignored.size(); ++i)
   str += "?,";
 
  str.pop_back();
@@ -342,7 +342,7 @@ void update_row(SharedResource &r, vstr_map &row, const Jnode & node, vstr_map *
  REVEAL(r, opt, DBG())
 
  bool extend{false};                                            // current node has to be extended?
- for(int i=1; i<opt[CHR(OPT_MAP)].size(); ++i)                  // go thru all -m options
+ for(size_t i=1; i<opt[CHR(OPT_MAP)].size(); ++i)               // go thru all -m options
   if(opt[CHR(OPT_MAP)].str(i) == node.label()) {                // find index of -m with this label
    if(opt[CHR(OPT_MAP)].prior(i) == CHR(OPT_EXP)) extend = true;// if prior option was -e?
    break;
