@@ -14,6 +14,8 @@ download `jsl-master.zip`, unzip it, descend into unzipped folder, compile using
 an appropriate command, move compiled file into an install location.
 
 1. here's the steps for *MacOS*:
+
+
 say, `jsl-master.zip` has been downloaded to a folder and the terminal app is open in that
 folder:
   - `unzip jsl-master.zip`
