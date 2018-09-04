@@ -1,6 +1,6 @@
 # jsl - JSON to Sqlite db dumper
 
-- offline tool to store regular JSON structures into Sqlite3 database
+offline tool to store regular JSON structures into Sqlite3 database
 
 #### Linux and MacOS precompiled binaries are available for download
 
@@ -29,7 +29,7 @@ folder:
   - `wget https://sqlite.org/2018/sqlite-amalgamation-3240000.zip`
   - `unzip sqlite-amalgamation-3240000.zip`
   - `gcc -O3 -c sqlite-amalgamation-3240000/sqlite3.c -DSQLITE_THREADSAFE=0 -DSQLITE_OMIT_LOAD_EXTENSION -ldl -lpthread -static`
-  - `c++ -o jsl -Wall -std=gnu++14 sqlite3.o -static -ldl jsl.cpp
+  - `c++ -o jsl -Wall -std=gnu++14 sqlite3.o -static -ldl jsl.cpp`
   - `sudo mv ./jsl /usr/local/bin/`
 
 #### Jump start usage guide:
@@ -122,10 +122,19 @@ Jane|Denver|6213 E Colfax Ave|CO|80206
 bash $
 ```
 As follows from the example, option `-m` provides 1:1 mapping from JSON labels onto respecitve columns in db table
-(order of `-m` follows the order of columns in the db table). Number of mapped labels must correspond to the number
+(order of `-m` follows the order of columns in the db table). A number of mapped labels must correspond to the number
 of columns in the db table.
 
-Instead of listing each column individually, `-M`
+
+Instead of listing each column individually, `-M` option lets listing all of the together over comma:
+```
+bash $ cat ab.json | jsl -M "Name, city, street address, state, postal code" sql.db ADDRESS_BOOK
+```
+all heading and trailing spaces around JSON labels will be stripped (if JSON contains such spacing, then use `-m`)
+Also, if both options are given, then option `-M` is always processed *after* `-m`, thus following two examples
+are equal:
+  - `jsl -M "b, c" -m a file.db TABLE`
+  - `jsl -m a -m b -m c file.db TABLE`
 
 
 
