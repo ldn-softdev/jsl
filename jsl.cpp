@@ -12,7 +12,6 @@
 using namespace std;
 
 
-
 #define VERSION "1.00"
 
 
@@ -144,7 +143,7 @@ int main(int argc, char *argv[]) {
    labels\n");
  // parse options
  try { opt.parse(argc,argv); }
- catch(stdException & e) 
+ catch(stdException & e)
   { opt.usage(); return e.code() + OFF_GETOPT; }
 
  DBG().level(opt[CHR(OPT_DBG)])
@@ -292,7 +291,7 @@ string columns(SharedResource &r) {
  size_t value_pos{0};
  for(auto &column: table_info) {
   size_t next_separator = values.find_first_of(",)", value_pos);
-  string value{ values, value_pos, next_separator-value_pos };  // extract: <C-Name definition>,  
+  string value{ values, value_pos, next_separator-value_pos };  // extract: <C-Name definition>,
   value_pos = next_separator + 1;
 
   if(ignored.count(column.name) == 1) continue;
@@ -500,7 +499,7 @@ string maybe_quote(string str) {
  // quote string if it contains ` ` or `"` or `'`
  // able to quote only spaces and/or `"`, or spaces and/or `'`. combination of `'` + `"` is illegal
  bool space{false}, single{false}, dual{false};                 // space/ single quote/double quote
- for(auto c: str) 
+ for(auto c: str)
   switch(c) {
    case ' ' : space = true; break;
    case '\'': single = true; break;
