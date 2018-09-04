@@ -243,6 +243,7 @@
 
 #pragma once
 
+#include <limits.h>
 #include <vector>
 #include <set>
 #include <map>
@@ -654,7 +655,12 @@ class Blob{
                          }
                         }
     uint8_t             counterSize_(size_t cntr) {
+                         #if ( __WORDSIZE == 64 )
                          static size_t bound[3]{1ul<<8, 1ul<<16, 1ul<<32};
+                         #endif
+                         #if ( __WORDSIZE == 32 )
+                         static size_t bound[2]{1ul<<8, 1ul<<16};
+                         #endif
                          for(int i=sizeof(bound)/sizeof(bound[0])-1; i>=0; --i)
                           if(cntr >= bound[i])
                            return i+1;
