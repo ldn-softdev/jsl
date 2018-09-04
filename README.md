@@ -23,7 +23,7 @@ folder:
   - `c++ -o jsl -Wall -std=c++14 -Ofast -lsqlite3 jsl.cpp`
   - `sudo mv ./jsl /usr/local/bin/`
 
-1. here's the steps for *Linux*:
+2. the steps for *Linux*:
   - `unzip jsl-master.zip`
   - `cd jsl-master`
   - `wget https://sqlite.org/2018/sqlite-amalgamation-3240000.zip`
