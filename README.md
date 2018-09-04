@@ -148,7 +148,7 @@ bash $ sqlite3 sql.db "delete from ADDRESS_BOOK;"
 ```
 and this time try dumping all values except `State` column. For that purpose option `-i` comes handy:`
 ```
-bash $ cat ab.json | jsl -m Name -M "city, street address, postal code" -i State  sql.db ADDRESS_BOOK
+bash $ cat ab.json | jsl -m Name -M "city, street address, postal code" -i State sql.db ADDRESS_BOOK
 updated 3 records into sql.db, table: ADDRESS_BOOK
 bash $ 
 bash $ sqlite3 sql.db -header "select * from ADDRESS_BOOK;"
@@ -158,11 +158,14 @@ Ivan|Seattle|5423 Madison St||98104
 Jane|Denver|6213 E Colfax Ave||80206
 bash $ 
 ```
-**NOTE**: *while option `-m` (`-M`) lists JSON labels (to be mapped onto the respecitve columns), `-i` option list db table column names*
+**NOTE**: *while option `-m` (`-M`) lists JSON labels (to be mapped onto the respecitve columns), `-i` option list db table column names;
+a resulting number of mapped values (plus ignored columns) still should match the number of columns in the updated table*  
 
-Opotion `-i` has a similar counterpart `-I` letting list multiple db table columns. The relationship is the same as for `-m` and `-M`.
+Opotion `-i` has a similar counterpart `-I` letting listing multiple db table columns. The relationship between them is the same
+as for options `-m` and `-M`
 
 
+##### 3. expand JSON containers (`-e` explained)
 
 
 ##### Enhancement requests are more than welcome: *ldn.softdev@gmail.com*
