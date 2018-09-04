@@ -11,7 +11,7 @@
 
 using namespace std;
 
-/* compile line
+/* compile line on Mac
 c++ -o jsl -Wall -std=c++14 -lsqlite3 jsl.cpp
 */
 
