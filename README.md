@@ -37,6 +37,8 @@ folder:
 ##### 1. map JSON labels to sqlite table columns (`-m` explained)
 
 Regular JSON structures could be mapped to respective columns in Sqlite3 db, following example illustrates that:
+
+
 Say, sql.db contains a table `ADDRESS_BOOK`, with following columns defined:
 ```
 bash $ sqlite3 sql.db -header "PRAGMA table_info(ADDRESS_BOOK);"
