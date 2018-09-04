@@ -116,6 +116,7 @@ the way to achieve this using `jsl` would be:
 ```
 bash $ cat ab.json | jsl -m Name -m city -m "street address" -m state -m "postal code" sql.db ADDRESS_BOOK
 updated 3 records into sql.db, table: ADDRESS_BOOK
+bash $
 bash $ sqlite3 sql.db -header "select * from ADDRESS_BOOK;"
 Name|City|Street|State|Zip
 John|New York|599 Lafayette St|NY|10012
@@ -137,6 +138,30 @@ Also, if both options are given, then option `-M` is always processed *after* `-
 are equal:
   - `jsl -M "b, c" -m a file.db TABLE`
   - `jsl -m a -m b -m c file.db TABLE`
+
+
+##### 2. exclude table columns from the update (`-i` explained)
+
+Let's rollback to the empty ADDRESS_BOOK table,
+```
+bash $ sqlite3 sql.db "delete from ADDRESS_BOOK;"
+```
+and this time try dumping all values except `State` column. For that purpose option `-i` comes handy:`
+```
+bash $ cat ab.json | jsl -m Name -M "city, street address, postal code" -i State  sql.db ADDRESS_BOOK
+updated 3 records into sql.db, table: ADDRESS_BOOK
+bash $ 
+bash $ sqlite3 sql.db -header "select * from ADDRESS_BOOK;"
+Name|City|Street|State|Zip
+John|New York|599 Lafayette St||10012
+Ivan|Seattle|5423 Madison St||98104
+Jane|Denver|6213 E Colfax Ave||80206
+bash $ 
+```
+**NOTE**: *while option `-m` (`-M`) lists JSON labels (to be mapped onto the respecitve columns), `-i` option list db table column names*
+
+Opotion `-i` has a similar counterpart `-I` letting list multiple db table columns. The relationship is the same as for `-m` and `-M`.
+
 
 
 
