@@ -140,6 +140,7 @@ are equal:
   - `jsl -m a -m b -m c file.db TABLE`
 
 
+
 ##### 2. exclude table columns from the update (`-i` explained)
 
 Let's rollback to the empty ADDRESS_BOOK table,
@@ -163,6 +164,8 @@ a resulting number of mapped values (plus ignored columns) still should match th
 
 Opotion `-i` has a similar counterpart `-I` letting listing multiple db table columns. The relationship between them is the same
 as for options `-m` and `-M`
+
+
 
 
 ##### 3. expand JSON containers (`-e` explained)
