@@ -394,6 +394,14 @@
  *                          // children
  *
  *
+ *  c) an optional second parameter for walk() is CacheAction, which defaults to
+ *   'invalidate' - i.e. upon every new walk the entire search cache will be
+ *   invalidated (cleared). If a user wants to keep the cache, he need to specify
+ *   'keep_cache' keyword explicitly (at least the decision is conscious)
+ *   CAUTION: Keeping the search cache after JSON has been modified may lead to
+ *            undefined behavior.
+ *
+ *
  *  Some examples:
  *  Let's iterate over all labels "Street" in above JSON:
  *      for(const auto &rec: json.walk("[Address Book] <Street>l+0"))

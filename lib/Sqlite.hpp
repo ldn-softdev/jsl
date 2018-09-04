@@ -2,7 +2,8 @@
  *  Created by Dmitry Lyssenko, last modified August 27, 2018
  *
  *
- * This is a simple sqlite3 wrapper (upon compiling don't forget attach Sql3 library -lsqlite3).
+ * This is a simple lightweight sqlite3 wrapper (upon compiling don't forget to include 
+ * -lsqlite3).
  * the wrapper is meant to be written to support c++ idiomatic interface
  *
  * SYNOPSIS:

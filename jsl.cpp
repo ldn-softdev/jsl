@@ -11,9 +11,6 @@
 
 using namespace std;
 
-/* compile line on Mac
-c++ -o jsl -Wall -std=c++14 -lsqlite3 jsl.cpp
-*/
 
 
 #define VERSION "1.00"
@@ -214,7 +211,9 @@ void parse_db(SharedResource &r) {
  DBG().severity(db);
  vector<MasterRecord> master_tbl;                               // read here sqlite_master table
 
- db.open(opt[ARG_DBF].str(), SQLITE_OPEN_READONLY)
+ db.open(opt[ARG_DBF].str(), (opt[CHR(OPT_GEN)].hits() >=0 and table_info.empty()?
+                              SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE:
+                              SQLITE_OPEN_READONLY))
    .compile("SELECT * FROM sqlite_master WHERE type='table';")
    .read(master_tbl);
 
