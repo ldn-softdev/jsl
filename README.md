@@ -160,18 +160,82 @@ Jane|Denver|6213 E Colfax Ave||80206
 bash $ 
 ```
 **NOTE**: *while option `-m` (`-M`) lists JSON labels (to be mapped onto the respecitve columns), `-i` option list db table column names;
-a resulting number of mapped values (plus ignored columns) still should match the number of columns in the updated table*  
-
-Opotion `-i` has a similar counterpart `-I` letting listing multiple db table columns. The relationship between them is the same
-as for options `-m` and `-M`
+a resulting number of mapped values (plus ignored columns) still should match the number of columns in the updated table*
 
 
+Opotion `-i` has a similar counterpart `-I` letting listing multiple db table columns (though in this case order of listed parameters is irrelevant)
 
 
-##### 3. expand JSON containers (`-e` explained)
+##### 3. table auto-generation (`-a` explained)
+Ok, this time let's start afresh with a clean slate:
+```
+bash $ sqlite3 sql.db "drop table ADDRESS_BOOK;"
+bash $ sqlite3 sql.db "PRAGMA table_info(ADDRESS_BOOK);"
+bash $ 
+```
+`jsl` is capable of auto-generating table from mapped JSON lables:
+  - name of the column will be taken from the JSON label
+  - type of the column will correspond to the mapped JSON type:
+    - for JSON number and boolean values it will be `NUMERIC`
+    - for other JSON values it will be TEXT
+  - order of the columns in auto-generated table will be the same as they come in JSON (first come, first served)
+  - first auto-generated column will be also auto-assigned `PRIMARY KEY`
+```
+bash $ cat ab.json | jsl -a -M "Name, age, city, street address, state, postal code" sql.db ADDRESS_BOOK
+updated 3 records into sql.db, table: ADDRESS_BOOK
+bash $ sqlite3 sql.db "PRAGMA table_info(ADDRESS_BOOK);"
+0|Name|TEXT|0||1
+1|age|NUMERIC|0||0
+2|city|TEXT|0||0
+3|street address|TEXT|0||0
+4|state|TEXT|0||0
+5|postal code|NUMERIC|0||0
+bash $ sqlite3 sql.db -header "select * from ADDRESS_BOOK;"
+Name|age|city|street address|state|postal code
+John|25|New York|599 Lafayette St|NY|10012
+Ivan|31|Seattle|5423 Madison St|WA|98104
+Jane|25|Denver|6213 E Colfax Ave|CO|80206
+bash $ 
+```
+Also, seeing table definition (i.e table_info PRAGMA) is possible with `jsl` if neither of `-m` or `-M` is given:
+```
+bash $ jsl sql.db ADDRESS_BOOK
+table [ADDRESS_BOOK]:
+schema.. CREATE TABLE ADDRESS_BOOK (Name TEXT PRIMARY KEY,age NUMERIC,city TEXT,"street address" TEXT,state TEXT,"postal code" NUMERIC)
+TableInfo.. cid:0, name:"Name", type:"TEXT", not_null:0, primary_key:1 
+TableInfo.. cid:1, name:"age", type:"NUMERIC", not_null:0, primary_key:0 
+TableInfo.. cid:2, name:"city", type:"TEXT", not_null:0, primary_key:0 
+TableInfo.. cid:3, name:"street address", type:"TEXT", not_null:0, primary_key:0 
+TableInfo.. cid:4, name:"state", type:"TEXT", not_null:0, primary_key:0 
+TableInfo.. cid:5, name:"postal code", type:"NUMERIC", not_null:0, primary_key:0 
+
+bash $ 
+```
+
+*a table definition will be auto-generated only if the tabe is not yet defined, otherwise existing table defintion will be used
+(i.e. `-a` will be ignored)*
 
 
-##### Enhancement requests are more than welcome: *ldn.softdev@gmail.com*
+##### 4. expand JSON containers (`-e` explained)
+
+
+##### 5. tables with `AUTOINCREMENT`ed columns
+  - if table definition caters any columns with keyword `AUTOINCREMENT`, such columns will be automatically ignored 
+(i.e. no need listing it in `-i`, `-I`), obviously such columns won't be part of any mapping
+
+That allows defining a rule for consitent and predictable mapping:
+*A number of mapped JSON values (after all values expansions) plus number of ignored columns should match the number of
+columns in the updated table minus those with 'AUTOINCREMENT'
+
+
+#### Planned enhancements:
+1. add capability to specify not just JSON labels in maps `-m`, `-M` but also walk paths 
+(see [jtc](https://github.com/ldn-softdev/jtc) for walk path explanation)
+2. add support for `SQL Foreign Key` to the tool
+
+
+
+#### Enhancement requests are more than welcome: *ldn.softdev@gmail.com*
 
 
 
