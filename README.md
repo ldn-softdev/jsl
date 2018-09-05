@@ -218,7 +218,7 @@ bash $
 
 ##### 4. expand JSON containers (`-e` explained)
 if mapped JSON value (through `-m` or `-M`) is pointing to JSON array or object (a.k.a. iterable), then it's possible to subject 
-the mapped iterable to the column update. The option `-e` does the trick, but it has to preceed every option `-m` where such 
+the mapped iterable to the column update. The option `-e` does the trick, but it has to precede every option `-m` where such 
 subjection is required. if option `-e` precedes `-M`, then it's applied to all listed labels.
 
 Let's work with previously auto-generated table, but first clean it up:
