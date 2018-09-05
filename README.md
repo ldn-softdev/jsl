@@ -224,15 +224,15 @@ bash $
 (i.e. no need listing it in `-i`, `-I`), obviously such columns won't be part of any mapping
 
 That allows defining a rule for consitent and predictable mapping:
+
 *A number of mapped JSON values (after all values expansions) plus number of ignored columns should match the number of
-columns in the updated table minus those with 'AUTOINCREMENT'
+columns in the updated table minus those with 'AUTOINCREMENT'*
 
 
 #### Planned enhancements:
 1. add capability to specify not just JSON labels in maps `-m`, `-M` but also walk paths 
 (see [jtc](https://github.com/ldn-softdev/jtc) for walk path explanation)
 2. add support for `SQL Foreign Key` to the tool
-
 
 
 #### Enhancement requests are more than welcome: *ldn.softdev@gmail.com*
