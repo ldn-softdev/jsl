@@ -250,7 +250,7 @@
 #include <utility>      // std::forward, std::move,
 #include <cstdint>      // uint8_t, ...
 #include <type_traits>
-#include "enums.hpp"
+#include "extensions.hpp"
 //#include "dbg.hpp"
 
 
@@ -477,7 +477,7 @@ class Blob{
                         // non-actual; all others are actual - which means that RSERDES must
                         // recreate recursive data structures for all such pointers
     template<typename T, typename... Args>
-    typename std::enable_if<std::is_pointer<T>::value, bool>::type
+             typename std::enable_if<std::is_pointer<T>::value, bool>::type
                         is_actual(T ptr)
                          { return mpl_[0].find(ptr) == mpl_[0].end(); }
 

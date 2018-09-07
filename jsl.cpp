@@ -59,6 +59,7 @@ struct MasterRecord {
 };
 
 
+
 // PRAGMA table-info record
 struct TableInfo {
     int                 cid;
@@ -73,6 +74,7 @@ struct TableInfo {
 };
 
 
+
 struct SharedResource {
     Getopt              opt;
     Json                json;                                   // source JSON
@@ -85,6 +87,7 @@ struct SharedResource {
 
     DEBUGGABLE()
 };
+
 
 #define __REFX__(A) auto & A = __common_resource__.A;
 #define REVEAL(X, ARGS...) \
@@ -150,7 +153,6 @@ int main(int argc, char *argv[]) {
       .use_ostream(cerr)
       .severity(json);
  post_parse(r);
-
 
  try {
   parse_db(r);

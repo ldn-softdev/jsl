@@ -122,7 +122,7 @@
 #include <memory>
 #include <type_traits>
 #include "macrolib.h"
-#include "enums.hpp"
+#include "extensions.hpp"
 #include "Blob.hpp"
 #include "dbg.hpp"
 
@@ -152,7 +152,6 @@ class Sqlite {
                          swap(l.htypes_, r.htypes_);
                          swap(l.hdtypes_, r.hdtypes_);
                          swap(l.rc_, r.rc_);
-                         swap(l.brc_, r.brc_);
                          swap(l.ts_, r.ts_);
                          swap(l.pi_, r.pi_);
                          swap(l.pc_, r.pc_);
@@ -326,7 +325,6 @@ class Sqlite {
     int                 rc_{SQLITE_OK};                         // last result code
 
  private:
-    std::set<int>       brc_{SQLITE_OK, SQLITE_DONE, SQLITE_CONSTRAINT, SQLITE_ROW};    // benign rc
     Transaction         ts_{out_of_transaction};                // 0/1/2:  out/in_nosql/in_sql
     int                 pi_{1};                                 // parameter index
     int                 pc_{0};                                 // parameter count
@@ -335,7 +333,7 @@ class Sqlite {
     bool                sne_{false};                            // skip next exec_()
     std::string         lsql_;                                  // cached last sql statement
 
-    EXCEPTIONS(ThrowReason)                                     // see "enums.hpp"
+    EXCEPTIONS(ThrowReason)                                     // see "extensions.hpp"
 };
 
 STRINGIFY(Sqlite::ThrowReason, THROWREASON)
@@ -409,7 +407,7 @@ Sqlite & Sqlite::end_transaction(void) {
  bool rolled{false};
  if(ts_ == in_transaction_compiled)
   finalize();
- if(brc_.count(rc()) == 1)                                      // good return codes
+ if(rc() AMONG(SQLITE_OK, SQLITE_DONE, SQLITE_CONSTRAINT, SQLITE_ROW))                                      // good return codes
   rc_ = sqlite3_exec(dbp_, "END TRANSACTION", nullptr, nullptr, nullptr);
  else
   { rc_ = sqlite3_exec(dbp_, "ROLLBACK", nullptr, nullptr, nullptr); rolled = true; } 
@@ -651,7 +649,7 @@ Sqlite & Sqlite::exec_(void) {
  }                                                              // data was read in a prior call
  rc_ = sqlite3_step(ppStmt_);
  DBG(3) DOUT() << "stepped through, tr/rc: " << ts_ <<'/'<< rc_ << std::endl;
- if(brc_.count(rc()) == 0)                                      // good return codes
+ if(not(rc() AMONG(SQLITE_DONE, SQLITE_CONSTRAINT, SQLITE_ROW)))// benign return codes
   throw EXP(could_not_evaluate_sql_statement);
 
  if(pc_ > 0 and pc_+1 == pi_) {                                 // sql statement was with params
