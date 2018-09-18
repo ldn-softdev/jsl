@@ -3,10 +3,10 @@
 offline tool to store regular JSON structures into Sqlite3 database
 
 #### Linux and MacOS precompiled binaries are available for download:
-- [macOS 64 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-macos-64.v1.00)
-- [macOS 32 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-macos-32.v1.00)
-- [linux 64 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-linux-64.v1.00)
-- [linux 32 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-linux-32.v1.00)
+- [macOS 64 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-macos-64.v1.02)
+- [macOS 32 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-macos-32.v1.02)
+- [linux 64 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-linux-64.v1.02)
+- [linux 32 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-linux-32.v1.02)
 
 #### Compile and install instructions:
 
@@ -115,8 +115,28 @@ And we want to dump into that table respecitve fields from this JSON in the file
 the way to achieve this using `jsl` would be:
 ```
 bash $ cat ab.json | jsl -m Name -m city -m "street address" -m state -m "postal code" sql.db ADDRESS_BOOK
+table [ADDRESS_BOOK]:
+headers.. |Name|City|Street|State|Zip|
+ Name: John
+ City: New York
+ Street: 599 Lafayette St
+ State: NY
+ Zip: 10012
+-- flushed to db (row 1: 5 values)
+ Name: Ivan
+ City: Seattle
+ Street: 5423 Madison St
+ State: WA
+ Zip: 98104
+-- flushed to db (row 2: 5 values)
+ Name: Jane
+ City: Denver
+ Street: 6213 E Colfax Ave
+ State: CO
+ Zip: 80206
+-- flushed to db (row 3: 5 values)
 updated 3 records into sql.db, table: ADDRESS_BOOK
-bash $
+bash $ 
 bash $ sqlite3 sql.db -header "SELECT * FROM ADDRESS_BOOK;"
 Name|City|Street|State|Zip
 John|New York|599 Lafayette St|NY|10012
@@ -129,15 +149,16 @@ As follows from the example, option `-m` provides 1:1 mapping from JSON labels o
 of columns in the db table.
 
 
-Instead of listing each column individually, `-M` option lets listing all of the together over comma:
+Instead of listing each column individually, `-M` option lets listing all of the mapped labels together over comma:
 ```
 bash $ cat ab.json | jsl -M "Name, city, street address, state, postal code" sql.db ADDRESS_BOOK
 ```
 all heading and trailing spaces in `-M` parameter around JSON labels will be stripped (if JSON contains such spacing, 
-then use `-m` instead). Also, if both options are given, then option `-M` is always processed *after* `-m`, thus following two examples
+then use `-m` instead). Option `-M` internally is expanded into respective number of `-m` options. Options `-m`, `-M`
+could be specified multiple times, preserving the order of each other respectively. E.g., following two examples
 are equal:
-  - `jsl -M "b, c" -m a file.db TABLE`
-  - `jsl -m a -m b -m c file.db TABLE`
+  - `jsl -M "b, c" -m a -M "d, e" file.db TABLE`
+  - `jsl -m b -m c -m a -m d -m e file.db TABLE`
 
 
 
@@ -150,6 +171,23 @@ bash $ sqlite3 sql.db "DELETE FROM ADDRESS_BOOK;"
 and this time try dumping all values except `State` column. For that purpose option `-i` comes handy:`
 ```
 bash $ cat ab.json | jsl -m Name -M "city, street address, postal code" -i State sql.db ADDRESS_BOOK
+table [ADDRESS_BOOK]:
+headers.. |Name|City|Street|State|Zip|
+ Name: John
+ City: New York
+ Street: 599 Lafayette St
+ State: 10012
+-- flushed to db (row 1: 4 values)
+ Name: Ivan
+ City: Seattle
+ Street: 5423 Madison St
+ State: 98104
+-- flushed to db (row 2: 4 values)
+ Name: Jane
+ City: Denver
+ Street: 6213 E Colfax Ave
+ State: 80206
+-- flushed to db (row 3: 4 values)
 updated 3 records into sql.db, table: ADDRESS_BOOK
 bash $ 
 bash $ sqlite3 sql.db -header "SELECT * FROM ADDRESS_BOOK;"
@@ -163,7 +201,7 @@ bash $
 a resulting number of mapped values (plus ignored columns) still should match the number of columns in the updated table*
 
 
-Opotion `-i` has a similar counterpart `-I` letting listing multiple db table columns (though in this case, the order of listed parameters is irrelevant)
+Option `-i` has a similar counterpart `-I` letting listing multiple db table columns
 
 
 ##### 3. table auto-generation (`-a` explained)
@@ -182,7 +220,31 @@ bash $
   - first auto-generated column will be also auto-assigned `PRIMARY KEY`
 ```
 bash $ cat ab.json | jsl -a -M "Name, age, city, postal code, state, street address" sql.db ADDRESS_BOOK
+table [ADDRESS_BOOK]:
+generated schema.. CREATE TABLE ADDRESS_BOOK (Name TEXT PRIMARY KEY,age NUMERIC,city TEXT,"postal code" NUMERIC,state TEXT,"street address" TEXT);
+ Name: John
+ age: 25
+ city: New York
+ postal code: 10012
+ state: NY
+ street address: 599 Lafayette St
+-- flushed to db (row 1: 6 values)
+ Name: Ivan
+ age: 31
+ city: Seattle
+ postal code: 98104
+ state: WA
+ street address: 5423 Madison St
+-- flushed to db (row 2: 6 values)
+ Name: Jane
+ age: 25
+ city: Denver
+ postal code: 80206
+ state: CO
+ street address: 6213 E Colfax Ave
+-- flushed to db (row 3: 6 values)
 updated 3 records into sql.db, table: ADDRESS_BOOK
+bash $ 
 bash $ sqlite3 sql.db "PRAGMA table_info(ADDRESS_BOOK);"
 0|Name|TEXT|0||1
 1|age|NUMERIC|0||0
@@ -208,7 +270,6 @@ TableInfo.. cid:2, name:"city", type:"TEXT", not_null:0, primary_key:0
 TableInfo.. cid:3, name:"postal code", type:"NUMERIC", not_null:0, primary_key:0 
 TableInfo.. cid:4, name:"state", type:"TEXT", not_null:0, primary_key:0 
 TableInfo.. cid:5, name:"street address", type:"TEXT", not_null:0, primary_key:0 
-
 bash $ 
 ```
 
@@ -238,7 +299,22 @@ The order of entries: `city`, `postal code`, `state`, `street address`, is the s
 Thus, instead of enumerating each label individually, it's possible to map the label of the iterable - `address` and expand it:
 ```
 bash $ cat ab.json | jsl -eM "Name, age, address" sql.db ADDRESS_BOOK
+table [ADDRESS_BOOK]:
+headers.. |Name|age|city|postal code|state|street address|
+ Name: John
+ age: 25
+ city .. street address: New York|10012|NY|599 Lafayette St
+-- flushed to db (row 1: 6 values)
+ Name: Ivan
+ age: 31
+ city .. street address: Seattle|98104|WA|5423 Madison St
+-- flushed to db (row 2: 6 values)
+ Name: Jane
+ age: 25
+ city .. street address: Denver|80206|CO|6213 E Colfax Ave
+-- flushed to db (row 3: 6 values)
 updated 3 records into sql.db, table: ADDRESS_BOOK
+bash $
 bash $ sqlite3 sql.db -header "SELECT * FROM ADDRESS_BOOK;"
 Name|age|city|postal code|state|street address
 John|25|New York|10012|NY|599 Lafayette St
@@ -261,10 +337,62 @@ That allows defining a rule for consitent and predictable mapping:
 *A number of mapped JSON values (after all values expansions) plus number of ignored columns should match the number of
 columns in the updated table minus those with 'AUTOINCREMENT'*
 
+##### 6. Mapping JSON values using walk-path
+Options `-m`, `-M` also allow specifying walk-path (refer to [jtc](https://github.com/ldn-softdev/jtc) for walk path explanation).
+Desired mapping might not always be in JSON object, it could resides in arrays, in such case walk-path could be used instead of a label.
+Say, we first extract desired values from our json (just for the same of walk-path usage):
+```
+bash $ cat ab.json | jtc -x[0][+0] -y[Name] -y[age] -y[address][+0] -jll
+[
+   {
+      "Name": "John",
+      "age": 25,
+      "city": "New York",
+      "postal code": 10012,
+      "state": "NY",
+      "street address": "599 Lafayette St"
+   },
+   {
+      "Name": "Ivan",
+      "age": 31,
+      "city": "Seattle",
+      "postal code": 98104,
+      "state": "WA",
+      "street address": "5423 Madison St"
+   },
+   {
+      "Name": "Jane",
+      "age": 25,
+      "city": "Denver",
+      "postal code": 80206,
+      "state": "CO",
+      "street address": "6213 E Colfax Ave"
+   }
+]
+bash $ 
+```
+The above JSON could have been mapped using each label, but there is much easier way - via specifying a walk-path:
+```
+bash $ cat ab.json | jtc -x[0][+0] -y[Name] -y[age] -y[address][+0] -jll | jsl -e -m [+0] sql.db ADDRESS_BOOK
+table [ADDRESS_BOOK]:
+headers.. |Name|age|city|postal code|state|street address|
+ Name .. street address: John|25|New York|10012|NY|599 Lafayette St
+-- flushed to db (row 1: 6 values)
+ Name .. street address: Ivan|31|Seattle|98104|WA|5423 Madison St
+-- flushed to db (row 2: 6 values)
+ Name .. street address: Jane|25|Denver|80206|CO|6213 E Colfax Ave
+-- flushed to db (row 3: 6 values)
+updated 3 records into sql.db, table: ADDRESS_BOOK
+bash $ 
+```
+Each iteration of such walk-path points to a JSON object whithin root's array (which does not have a label). By specifying
+option `-e` we instruct to expand such JSON object into corresponding table columns
+
 
 #### Planned enhancements:
 1. add capability to specify in maping (`-m`, `-M`) json walk paths in addition to JSON labels 
 (see [jtc](https://github.com/ldn-softdev/jtc) for walk path explanation)
+- done
 2. add support for `SQL Foreign Key` to the tool (to build / make relational tables updates)
 
 
