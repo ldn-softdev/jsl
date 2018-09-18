@@ -391,8 +391,7 @@ option `-e` we instruct to expand such JSON object into corresponding table colu
 
 #### Planned enhancements:
 1. add capability to specify in maping (`-m`, `-M`) json walk paths in addition to JSON labels 
-(see [jtc](https://github.com/ldn-softdev/jtc) for walk path explanation)
-- done
+(see [jtc](https://github.com/ldn-softdev/jtc) for walk path explanation) - DONE
 2. add support for `SQL Foreign Key` to the tool (to build / make relational tables updates)
 
 
