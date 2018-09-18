@@ -89,7 +89,7 @@ struct SharedResource {
     size_t              updates{0};                             // # of updates made into db
     set<string>         ignored;                                // ignored columns (-i, -I)
 
-    ostream &           out(int quiet)                          // demux /dev/null & std::cout
+    ostream &           out(unsigned quiet)                     // demux /dev/null & std::cout
                          { return opt[CHR(OPT_QET)].hits()>=quiet? null_: std::cout; }
     DEBUGGABLE()
 
