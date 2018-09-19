@@ -13,7 +13,7 @@
 using namespace std;
 
 
-#define VERSION "1.02"
+#define VERSION "1.03"
 
 #define ROW_LMT 2                                               // 2 bytes per autogen. column index
 #define CLM_PFX Auto                                            // name prefix for auto-gen. columns
