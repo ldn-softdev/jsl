@@ -3,10 +3,10 @@
 offline tool to store regular JSON structures into Sqlite3 database
 
 #### Linux and MacOS precompiled binaries are available for download:
-- [macOS 64 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-macos-64.v1.02)
-- [macOS 32 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-macos-32.v1.02)
-- [linux 64 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-linux-64.v1.02)
-- [linux 32 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-linux-32.v1.02)
+- [macOS 64 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-macos-64.v1.03)
+- [macOS 32 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-macos-32.v1.03)
+- [linux 64 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-linux-64.v1.03)
+- [linux 32 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-linux-32.v1.03)
 
 #### Compile and install instructions:
 
@@ -201,7 +201,8 @@ bash $
 a resulting number of mapped values (plus ignored columns) still should match the number of columns in the updated table*
 
 
-Option `-i` has a similar counterpart `-I` letting listing multiple db table columns
+Option `-i` has a similar counterpart `-I` letting listing multiple db table columns. Also, no need specifying column which is
+ROWID - such column will be added to te list of ignored automatically.
 
 
 ##### 3. table auto-generation (`-a` explained)
@@ -277,6 +278,16 @@ bash $
 (i.e. `-a` will be ignored)*
 
 
+There's another option for table auto-generation: `-A`, which takes a parameter - column name. Difference from `-a` is that
+latter defines a 1st mapped column to be the primary key (whether it's TEXT or NUMERIC), while former, defines colum as 
+`INTEGER PRIMARY KEY`, which in Sqlite db defines the column as ROWID - which generates the index automatically.
+The implication is obvious:
+  - repetitive execution of auto-generated tables with `-a` with the same set of source data (source JSON) will result in
+  table rows being overwritten
+  - the same execution of auto-generated tables with `-A` results in extending tables with each new execution (using 
+  auto-generated ROWID index)
+
+
 ##### 4. expand JSON containers (`-e` explained)
 if mapped JSON value (through `-m` or `-M`) is pointing to JSON array or object (a.k.a. iterable), then it's possible to subject 
 the mapped iterable to the column update. The option `-e` does the trick, but it has to precede every option `-m` where such 
@@ -328,16 +339,7 @@ were not iterables) into following labels (and respective columns): `city`, `pos
 Option `-e` is compatible with option `-a`, labels could be expanded during auto-generation too.
 
 
-##### 5. tables with `AUTOINCREMENT`'ed columns
-  - if table definition caters any columns with keyword `AUTOINCREMENT`, such columns will be automatically ignored 
-(i.e. no need listing it in `-i`, `-I`), obviously such columns won't be part of any mapping
-
-That allows defining a rule for consitent and predictable mapping:
-
-*A number of mapped JSON values (after all values expansions) plus number of ignored columns should match the number of
-columns in the updated table minus those with 'AUTOINCREMENT'*
-
-##### 6. Mapping JSON values using walk-path
+##### 5. Mapping JSON values using walk-path
 Options `-m`, `-M` also allow specifying walk-path (refer to [jtc](https://github.com/ldn-softdev/jtc) for walk path explanation).
 Desired mapping might not always be in JSON object, it could resides in arrays, in such case walk-path could be used instead of a label.
 Say, we first extract desired values from our json (just for the same of walk-path usage):
