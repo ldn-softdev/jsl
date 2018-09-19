@@ -177,6 +177,12 @@ class Sqlite {
     ENUMSTR(ThrowReason, THROWREASON)
 
 
+    #define THROWING \
+                may_throw, \
+                dont_throw
+    ENUM(Throwing, THROWING)
+
+
     #define TRANSACTION \
                 out_of_transaction, \
                 in_transaction_precompiled, \
@@ -200,7 +206,7 @@ class Sqlite {
                          { swap(*this, other); }
                         Sqlite(const std::string &filename,     // open constructor, may throw
                                int flags=SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE);
-                       ~Sqlite(void) { if(dbp_) close(); }      // DD
+                       ~Sqlite(void) { if(dbp_) close(dont_throw); } // DD
 
     Sqlite &            operator=(const Sqlite & jn) = delete;  // CA: class is not copy assignable
     Sqlite &            operator=(Sqlite && other)              // MA: class move assignable
@@ -210,10 +216,10 @@ class Sqlite {
     // file and transaction operations
     Sqlite &            open(const std::string &fn,
                              int flags=SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE);
-    Sqlite &            close(void);
+    Sqlite &            close(Throwing = may_throw);
     sqlite3 **          dbp(void) { return & dbp_; };
     Sqlite &            begin_transaction(void);
-    Sqlite &            end_transaction(void);
+    Sqlite &            end_transaction(Throwing = may_throw);
     Sqlite &            compile(const std::string &str);
     Sqlite &            reset(void);
     Sqlite &            finalize(void);
@@ -338,6 +344,7 @@ class Sqlite {
 
 STRINGIFY(Sqlite::ThrowReason, THROWREASON)
 #undef THROWREASON
+#undef THROWING
 
 STRINGIFY(Sqlite::Transaction, TRANSACTION)
 #undef TRANSACTION
@@ -369,8 +376,8 @@ Sqlite & Sqlite::open(const std::string &filename, int flags) {
 
 
 
-Sqlite & Sqlite::close(void) {
- if(ts_ != out_of_transaction) end_transaction();
+Sqlite & Sqlite::close(Throwing throwing) {
+ if(ts_ != out_of_transaction) end_transaction(throwing);
  finalize();
  const char * fn{nullptr};
  if(DBG()(0)) fn = sqlite3_db_filename(dbp_, nullptr);
@@ -402,7 +409,7 @@ Sqlite & Sqlite::begin_transaction(void) {
 
 
 
-Sqlite & Sqlite::end_transaction(void) {
+Sqlite & Sqlite::end_transaction(Throwing throwing) {
  // ends transaction upon successful return code and rolls back otherwise
  bool rolled{false};
  if(ts_ == in_transaction_compiled)
@@ -414,10 +421,10 @@ Sqlite & Sqlite::end_transaction(void) {
 
  ts_ = out_of_transaction;
  DBG(1)
-  DOUT() << "ended transaction (" << (rolled? "via rollback": "successfully") 
-         << "), tr/rc: " << ts_ << '/' << rc_ << std::endl;
+  DOUT() << "ended transaction" << (rolled? "(via rollback)": "") 
+         << ", tr/rc: " << ts_ << '/' << rc_ << std::endl;
 
- if(rc_ != SQLITE_OK)
+ if(rc_ != SQLITE_OK and throwing == may_throw)
   throw EXP(could_not_end_transaction);
  return *this;
 }

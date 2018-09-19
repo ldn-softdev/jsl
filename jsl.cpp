@@ -19,6 +19,7 @@ using namespace std;
 #define CLM_PFX Auto                                            // name prefix for auto-gen. columns
 #define OPT_RDT -
 #define OPT_GEN a
+#define OPT_AIC A
 #define OPT_DBG d
 #define OPT_EXP e
 #define OPT_IGN i
@@ -85,7 +86,6 @@ struct SharedResource {
     string              tbl_name;                               // table to update in usere's db
     string              schema;                                 // table's schema
     vector<TableInfo>   table_info;                             // table's table_info pragma
-    size_t              autokeys{0};                            // # of AUTOINCREMENTs in schema
     size_t              updates{0};                             // # of updates made into db
     set<string>         ignored;                                // ignored columns (-i, -I)
 
@@ -127,6 +127,7 @@ typedef map<string, vector<string>> lbl_vstr_map;
 typedef map<size_t, vector<string>> itn_vstr_map;
 typedef map<string, size_t> lbl_opt;
 typedef map<size_t, size_t> itn_opt;
+
 class Vstr_maps {
  // the class facilitates a container for JSON values which to be dumped into sqlite
  // db (a full row). At the same time it's re-used to build columns definitions
@@ -160,7 +161,7 @@ class Vstr_maps {
 
 
 void Vstr_maps::book(const string &key, function<void(const Jnode &)> &&cb, size_t on) {
- // book place either in itr or lbl: defined by key being walk-path or label
+ // book place either in itr or lbl: predicated key being walk-path or label
  try {
   Json::iterator it = r_.json.walk(key, Json::keep_cache);      // first try parse as a walk
   if(it == r_.json.end()) return;                               // walk failed - don't register
@@ -196,6 +197,7 @@ void Vstr_maps::clear(void) {
 
 
 bool Vstr_maps::complete(void) const {
+ // row is considered to be complete when all containers are non-empty
  for(auto &lbl_vec: lbl_)
   if(lbl_vec.second.empty()) return false;
  for(auto &itn_vec: itr_)
@@ -278,28 +280,43 @@ int main(int argc, char *argv[]) {
  opt.prolog("\nJSON to Sqlite db dumper.\nVersion " VERSION \
             ", developed by Dmitry Lyssenko (ldn.softdev@gmail.com)\n");
  opt[CHR(OPT_GEN)].desc("auto-generate table schema from JSON values (if not in db yet)");
+ opt[CHR(OPT_AIC)].desc("auto-generate table schema with primary column becoming a ROWID")
+                  .name("column");
  opt[CHR(OPT_DBG)].desc("turn on debugs (multiple calls increase verbosity)");
  opt[CHR(OPT_EXP)].desc("expand followed mapping if it's a JSON array or object");
  opt[CHR(OPT_IGN)].desc("ignore a specified column").name("tbl_column");
  opt[CHR(OPT_IGS)].desc("ignore all listed columns (comma separated list)").name("header-list");
  opt[CHR(OPT_MAP)].desc("map a single label or walk-path onto a respective table column")
                   .name("label_walk");
- opt[CHR(OPT_MPS)].desc("map JSON labels (comma separated) to respective columns")
+ opt[CHR(OPT_MPS)].desc("map JSON labels/walks (comma separated) to respective columns")
                   .name("label-list");
  opt[CHR(OPT_QET)].desc("run quietly (multiple calls reduce verbocity)");
  opt[CHR(OPT_CLS)].desc("sql update clause").bind("INSERT OR REPLACE").name("clause");
  opt[ARG_DBF].desc("sqlite db file").name("db_file");
  opt[ARG_TBL].desc("sqlite db table to update").name("table").bind("auto-selected first in db");
- opt.epilog("\nNote on -m and -M usage:\n\
- - option -m lets mapping a single label, while -M specifies a list of labels\n\
-   over comma; option -M is expanded into respective number of -m options, the\n\
+ opt.epilog("\nNote on -" STR(OPT_MAP) " and -" STR(OPT_MPS) " usage:\n\
+ - option -" STR(OPT_MAP) " lets mapping a single label, while -" STR(OPT_MPS)
+   " specifies a list of labels\n\
+   over comma; option -" STR(OPT_MPS) " is expanded into respective number of -"
+   STR(OPT_MAP) " options, the\n\
    order and relevance with other options is preserved\n\
- - option -e lets expanding a given label (if it's expandable): i.e. a label\n\
-   may map onto a JSON array or object, if -e is not preceding -m, then mapped\n\
-   entry will be stored away in db as a raw JSON string. if -e precedes the\n\
+ - option -" STR(OPT_EXP)
+   " lets expanding a given label (if it's expandable): i.e. a label\n\
+   may map onto a JSON array or object, if -" STR(OPT_EXP)
+   " is not preceding -" STR(OPT_MAP) ", then mapped\n\
+   entry will be stored away in db as a raw JSON string. if -" STR(OPT_EXP)
+   " precedes the\n\
    mapping, then the mapped container will be expanded into respective db's\n\
-   records; specifying -e in front of -M extends that behavior onto all listed\n\
-   labels\n");
+   records; specifying -" STR(OPT_EXP)
+   " in front of -M extends that behavior onto all listed\n   labels\n\n\
+Note on -" STR(OPT_IGN) " and -" STR(OPT_IGS) " usage:\n\
+ - same semantic applied to processing of -" STR(OPT_IGS)
+   " (internally it's expanded into\n   respective -" STR(OPT_IGN)
+   " options). ROWID column will be ignored automatically (no need\n\
+   specifying): ROWID is the single PRIMARY KEY column with type INTEGER, which\n\
+   is incremented automatically\n\
+ - option -" STR(OPT_AIC) " auto-generates such ROWID column\n\n\
+For understanding walk-path refer to https://github.com/ldn-softdev/jtc\n");
 
  // parse options
  try { opt.parse(argc,argv); }
@@ -338,8 +355,8 @@ void post_parse(SharedResource &r) {
  // deparse -m, -M, extend -I here
  REVEAL(r, opt, opr, ignored, DBG())
 
- opr[CHR(OPT_MAP)].bind();                                      // prepare option for remapping
- opr[CHR(OPT_EXP)];
+ opr[CHR(OPT_MAP)].bind();                                      // prepare options for remapping:
+ opr[CHR(OPT_EXP)];                                             // -e, -m, -i will be moved to opr
 
  for(size_t i = 0, e = 0; i < opt.order().size(); ++i)          // move each -m and expand -M
   switch(opt.order(i).id()) {
@@ -349,7 +366,7 @@ void post_parse(SharedResource &r) {
     opr[CHR(OPT_MAP)] = opt.order(i).str();                     // insert -m value
     continue;
    case CHR(OPT_MPS):
-    for(size_t last{0}, found{0}; found != string::npos; last=found+1) {
+    for(size_t last{0}, found{0}; found != string::npos; last=found+1) {    // break up -M, move to -m
      if(e > 0) opr[CHR(OPT_EXP)].hit();                         // insert -e if flag is raised
      found = opt.order(i).str().find(",", last);
      opr[CHR(OPT_MAP)] = trim_spaces(opt.order(i).str().substr(last, found-last));
@@ -361,7 +378,7 @@ void post_parse(SharedResource &r) {
   switch(opt.order(i).id()) {
    case CHR(OPT_IGN): opr[CHR(OPT_IGN)] = opt.order(i).str(); continue;
    case CHR(OPT_IGS):
-    for(size_t last{0}, found{0}; found != string::npos; last=found+1) {
+    for(size_t last{0}, found{0}; found != string::npos; last=found+1) {// break up -I, move to -i
      found = opt.order(i).str().find(",", last);
      opr[CHR(OPT_IGN)] = trim_spaces(opt.order(i).str().substr(last, found-last));
     }
@@ -372,6 +389,8 @@ void post_parse(SharedResource &r) {
    ignored.insert(ign);
    DBG(0) DOUT() << "in updates will ignore column: " << ign << endl;
   }
+
+  opt[CHR(OPT_GEN)] = opt[CHR(OPT_AIC)].str();                  // move value of -A to -a
 }
 
 
@@ -455,32 +474,29 @@ void update_table(SharedResource &r) {
  }
 
  json.engage_callbacks().walk("<.^>R", Json::keep_cache);
+ db.close();
 }
 
 
 
 string columns(SharedResource &r) {
- // generate columns string, exclude those with AUTOINCREMENT and in ignored set
- REVEAL(r, schema, table_info, autokeys, ignored, DBG())
+ // generate columns string, exclude with ROWID and in ignored set
+ REVEAL(r, table_info, ignored, DBG())
 
  string str{" ("};
- string values{ schema, schema.find("(")+1 };                   // VALUE(... from schema
- DBG(1) DOUT() << "extracted values description: (" << values << endl;
 
  set<string> ignoring = move(ignored);
- size_t value_pos{0};
- for(auto &column: table_info) {
-  size_t next_separator = values.find_first_of(",)", value_pos);
-  string value{ values, value_pos, next_separator-value_pos };  // extract: <C-Name definition>,
-  value_pos = next_separator + 1;
+ for(auto &header: table_info) {
 
-  if(ignoring.count(column.name) == 1)
-   { ignored.insert(column.name); continue; }
-  if(value.find("AUTOINCREMENT") != string::npos)               // if column is autoinc'ed
-   { ++autokeys; continue; }                                    // don't include it into updates
+  if(ignoring.count(header.name) == 1)
+   { ignored.insert(header.name); continue; }
+  string h_type = header.type;
+  transform(h_type.begin(), h_type.end(), h_type.begin(), ::toupper);
+  if(h_type == "INTEGER" and header.primary_key == 1)           // if column is rowid
+   { ignored.insert(header.name); continue; }                   // don't include it into updates
 
-  DBG(2) DOUT() << "compiling: " << trim_spaces(move(value)) << endl;
-  str += maybe_quote(column.name) + ',';
+  DBG(2) DOUT() << "compiling: " << header.name << endl;
+  str += maybe_quote(header.name) + ',';
  }
 
  str.pop_back();                                                // pop trailing comma
@@ -494,10 +510,10 @@ string columns(SharedResource &r) {
 
 string value_placeholders(SharedResource &r) {
  // generate values placeholders (as many '?' as there updated parameters)
- REVEAL(r, table_info, autokeys, ignored, DBG())
+ REVEAL(r, table_info, ignored, DBG())
 
  string str;
- for(size_t i=0; i<table_info.size() - autokeys - ignored.size(); ++i)
+ for(size_t i=0; i<table_info.size() - ignored.size(); ++i)
   str += "?,";
 
  str.pop_back();
@@ -557,23 +573,25 @@ void dump_row(SharedResource &r, Sqlite &db, Vstr_maps &row) {
    r.out(1) << endl;
   }
  db << rout;
- r.out(1) << "-- flushed to db (row " << ++updates << ": " << row.size() << " values)" << endl;
+ if(db.rc() AMONG(SQLITE_OK, SQLITE_DONE))
+  ++updates;
+ r.out(1) << "-- flushed to db (" << updates << " updates / " << row.size() << " values)" << endl;
  row.clear();
- DBG(2) DOUT() << "-- flushed to db (" << updates << ")" << endl;
+ DBG(2) DOUT() << "-- dumped to db " << updates << " records" << endl;
 }
 
 
 
 void json_callback(SharedResource &r, Sqlite &db, Vstr_maps &row, const Jnode & node) {
  // build a row and dump it into database (also, facilitate -a option)
- REVEAL(r, opr, table_info, autokeys, ignored, DBG())
+ REVEAL(r, opr, table_info, ignored, DBG())
 
  DBG(2) DOUT() << (node.has_index()? "[" + to_string(node.index()) + "]":
                    (node.has_label()? node.label(): "root")) << ": " << node << endl;
  if(table_info.empty())                                         // need to generate schema (-a case)
   if(not schema_generated(r, db, row, node)) return;            // schema is't yet ready
 
- size_t full_size = table_info.size() - autokeys - ignored.size();
+ size_t full_size = table_info.size() - ignored.size();
  if(row.size() > full_size) {                                   // if failed previously
   if(node.label() != opr[CHR(OPT_MAP)].str(1))                  // wait until first label come thru
    { DBG(1) DOUT() << "waiting for the first mapped label to come" << endl; return; }
@@ -595,7 +613,7 @@ void json_callback(SharedResource &r, Sqlite &db, Vstr_maps &row, const Jnode & 
 
 bool schema_generated(SharedResource &r, Sqlite &db, Vstr_maps &row, const Jnode & node) {
  // return true if schema was generated, table_info read, etc
- REVEAL(r, opt, opr, DBG());
+ REVEAL(r, opt, opr, ignored, DBG());
  static Vstr_maps cschema{row};                                 // static ok, given build only once
 
  if(row.value_by_node(node).empty()) {                          // otherwise it's a next row
@@ -608,6 +626,11 @@ bool schema_generated(SharedResource &r, Sqlite &db, Vstr_maps &row, const Jnode
 
  string schema = "CREATE TABLE " + opt[ARG_TBL].str() + " (";   // ok, ready to build schema
  bool primary_key = true;
+ if(not opt[CHR(OPT_GEN)].str().empty()) {                      // first column is auto-incremented
+  schema += opt[CHR(OPT_GEN)].str() + " INTEGER PRIMARY KEY,";
+  ignored.insert(opt[CHR(OPT_GEN)].str());
+  primary_key = false;
+ }
  for(size_t i = 1; i < opr[CHR(OPT_MAP)].size(); ++i)
   for(auto &column_def: *cschema.value_by_position(i))
    { schema += column_def + (primary_key? " PRIMARY KEY": "") + ","; primary_key = false; }
