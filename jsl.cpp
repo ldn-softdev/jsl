@@ -390,7 +390,7 @@ void post_parse(SharedResource &r) {
    DBG(0) DOUT() << "in updates will ignore column: " << ign << endl;
   }
 
-  opt[CHR(OPT_GEN)] = opt[CHR(OPT_AIC)].str();                  // move value of -A to -a
+ opt[CHR(OPT_GEN)] = opt[CHR(OPT_AIC)].str();                   // move value of -A to -a
 }
 
 
