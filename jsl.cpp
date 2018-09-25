@@ -86,6 +86,7 @@ struct SharedResource {
     string              tbl_name;                               // table to update in usere's db
     string              schema;                                 // table's schema
     vector<TableInfo>   table_info;                             // table's table_info pragma
+    size_t              attempts{0};                            // # of records attempted into db
     size_t              updates{0};                             // # of updates made into db
     set<string>         ignored;                                // ignored columns (-i, -I)
 
@@ -275,7 +276,7 @@ const vector<string> & Vstr_maps::value_by_node(const Jnode &jn) const {
 int main(int argc, char *argv[]) {
 
  SharedResource r;
- REVEAL(r, opt, json, tbl_name, updates, DBG())
+ REVEAL(r, opt, json, tbl_name, attempts, updates, DBG())
 
  opt.prolog("\nJSON to Sqlite db dumper.\nVersion " VERSION \
             ", developed by Dmitry Lyssenko (ldn.softdev@gmail.com)\n");
@@ -335,7 +336,8 @@ For understanding walk-path refer to https://github.com/ldn-softdev/jtc\n");
 
   read_json(r);
   update_table(r);
-  r.out(3) << "updated " << updates << " records into " << opt[ARG_DBF].str()
+  r.out(3) << "attempted " << attempts << " updates, updated " 
+           << updates << " records into " << opt[ARG_DBF].str()
            << ", table: " << tbl_name << endl;
  }
  catch(stdException &e) {
@@ -556,7 +558,7 @@ void update_row(SharedResource &r, Vstr_maps &row,
 
 void dump_row(SharedResource &r, Sqlite &db, Vstr_maps &row) {
  // dump row's data into the db
- REVEAL(r, opr, table_info, updates, DBG())
+ REVEAL(r, opr, table_info, attempts, updates, DBG())
 
  vector<string> rout;                                           // prepare row for dumping to db
  for(size_t i=1; i<opr[CHR(OPT_MAP)].size(); ++i)
@@ -573,6 +575,7 @@ void dump_row(SharedResource &r, Sqlite &db, Vstr_maps &row) {
    r.out(1) << endl;
   }
  db << rout;
+ ++attempts;
  if(db.rc() AMONG(SQLITE_OK, SQLITE_DONE))
   ++updates;
  r.out(1) << "-- flushed to db (" << updates << " updates / " << row.size() << " values)" << endl;

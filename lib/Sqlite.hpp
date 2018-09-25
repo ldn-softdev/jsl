@@ -2,7 +2,7 @@
  *  Created by Dmitry Lyssenko, last modified August 27, 2018
  *
  *
- * This is a simple lightweight sqlite3 wrapper (upon compiling don't forget to include 
+ * This is a simple lightweight sqlite3 wrapper (upon compiling don't forget to include
  * -lsqlite3).
  * the wrapper is meant to be written to support c++ idiomatic interface
  *
@@ -417,11 +417,11 @@ Sqlite & Sqlite::end_transaction(Throwing throwing) {
  if(rc() AMONG(SQLITE_OK, SQLITE_DONE, SQLITE_CONSTRAINT, SQLITE_ROW))                                      // good return codes
   rc_ = sqlite3_exec(dbp_, "END TRANSACTION", nullptr, nullptr, nullptr);
  else
-  { rc_ = sqlite3_exec(dbp_, "ROLLBACK", nullptr, nullptr, nullptr); rolled = true; } 
+  { rc_ = sqlite3_exec(dbp_, "ROLLBACK", nullptr, nullptr, nullptr); rolled = true; }
 
  ts_ = out_of_transaction;
  DBG(1)
-  DOUT() << "ended transaction" << (rolled? "(via rollback)": "") 
+  DOUT() << "ended transaction" << (rolled? "(via rollback)": "")
          << ", tr/rc: " << ts_ << '/' << rc_ << std::endl;
 
  if(rc_ != SQLITE_OK and throwing == may_throw)
@@ -674,7 +674,7 @@ Sqlite & Sqlite::exec_(void) {
    htypes_.push_back( (DataType)sqlite3_column_type(ppStmt_, i) );
    ptr = sqlite3_column_decltype(ppStmt_, i);
    hdtypes_.push_back( ptr==nullptr? "": ptr );
-   
+
   }
 
  if(cc_ > 0) return *this;                                      // don't finalize/reset until DONE
