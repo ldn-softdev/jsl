@@ -596,6 +596,8 @@ class Blob{
                          spl.insert((void*)&ptr);
                         }
 
+    EXCEPTIONS(ThrowReason)
+
  protected:
     size_t              offset_{0};
    std::vector<uint8_t> blob_;
@@ -666,8 +668,6 @@ class Blob{
                            return i+1;
                          return 0;
                         }
-
-    EXCEPTIONS(ThrowReason)
 
 };
 

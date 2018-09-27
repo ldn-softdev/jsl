@@ -317,6 +317,7 @@ class Sqlite {
                          return *this;
                         }
     DEBUGGABLE()
+    EXCEPTIONS(ThrowReason)                                     // see "extensions.hpp"
 
  protected:
     Sqlite &            exec_(void);
@@ -338,8 +339,6 @@ class Sqlite {
     int                 cc_{0};                                 // column count
     bool                sne_{false};                            // skip next exec_()
     std::string         lsql_;                                  // cached last sql statement
-
-    EXCEPTIONS(ThrowReason)                                     // see "extensions.hpp"
 };
 
 STRINGIFY(Sqlite::ThrowReason, THROWREASON)

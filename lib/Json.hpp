@@ -1,5 +1,5 @@
 /*
- * Created by Dmitry Lyssenko, last modified August 2, 2018
+ * Created by Dmitry Lyssenko
  *
  * yet another JSON implementation featuring:
  *  - easy c++ API
@@ -873,6 +873,7 @@ class Jnode {
 
     //SERDES(type_, value_, descendants_)                       // not really needed
     //DEBUGGABLE()                                              // there are no debugs in Jnode
+    EXCEPTIONS(ThrowReason)                                     // see "extensions.hpp"
 
  protected:
                         Jnode(Jtype t):type_{t} {}              // for internal use
@@ -894,8 +895,6 @@ class Jnode {
 
     static char         endl_;                                  // either for raw or pretty print
     static uint8_t      tab_;                                   // tab size (for indention)
-
-    EXCEPTIONS(ThrowReason)                                     // see "extensions.hpp"
 };
 
 // class static definitions
@@ -1402,6 +1401,7 @@ class Json{
 
     //SERDES(root_)                                             // not really needed (so far)
     DEBUGGABLE()
+    EXCEPTIONS(Jnode::ThrowReason)
 
     static Jnode::Jtype json_number_definition(std::string::const_iterator & jsp);
 
@@ -1526,7 +1526,6 @@ class Json{
 
     // parse_offset_type_() is dependent on WalkStep definition, hence moved down here
     void                parse_offset_type_(WalkStep & state) const;
-    EXCEPTIONS(Jnode::ThrowReason)
 
  public:
     // Json::iterator: needs to be defined in-class to facilitate container storage
@@ -1804,8 +1803,8 @@ class Json{
                         }
     Json &              clear_callbacks(void)
                          { lcb_.clear(); icb_.clear(); return *this; }
-    lbl_callback_map &  lbl_callbacks(void) { return lcb_; }
-    itr_callback_vec &  itr_callbacks(void) { return icb_; }
+    lbl_callback_map &  lbl_callbacks(void) { return lcb_; }    // access to labeled callbacks
+    itr_callback_vec &  itr_callbacks(void) { return icb_; }    // access to iterator callbacks
 };
 
 // class static definitions

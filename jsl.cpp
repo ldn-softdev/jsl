@@ -13,7 +13,7 @@
 using namespace std;
 
 
-#define VERSION "1.03"
+#define VERSION "1.04"
 
 #define ROW_LMT 2                                               // 2 bytes per autogen. column index
 #define CLM_PFX Auto                                            // name prefix for auto-gen. columns
@@ -138,6 +138,11 @@ class Vstr_maps {
  // it also provides back-tracing of ordinal encounter of option -m to the mapped
  // container (vector)
  public:
+    #define MAPTYPE \
+                label, \
+                iter, \
+                neither
+    ENUM(MapType, MAPTYPE)
 
                         Vstr_maps(void) = delete;
                         Vstr_maps(SharedResource &r): r_(r) {}
@@ -150,6 +155,7 @@ class Vstr_maps {
     size_t              backtrace_opt(const Jnode &jn) const;
  const vector<string> * value_by_position(size_t opt_cnt) const;
  const vector<string> & value_by_node(const Jnode &jn) const;
+    MapType             mapped_type(size_t opt_cnt) const;
 
  protected:
     lbl_vstr_map        lbl_;                                   // mappings for lables
@@ -159,6 +165,7 @@ class Vstr_maps {
 
     SharedResource &    r_;
 };
+#undef MAPTYPE
 
 
 void Vstr_maps::book(const string &key, function<void(const Jnode &)> &&cb, size_t on) {
@@ -171,7 +178,7 @@ void Vstr_maps::book(const string &key, function<void(const Jnode &)> &&cb, size
   ion_[r_.json.itr_callbacks().size()-1] = on;                  // also record -m ordinal num
   DBG(r_, 0) DOUT(r_) << "booked iterator based callback: " << key << endl;
  }
- catch(stdException & e) {
+ catch(Json::stdException & e) {
   if(e.code() < Jnode::walk_offset_missing_closure) throw e;    // if failed with walk exception
   r_.json.callback(key, move(cb));
   lbl_[key];                                                    // then it's a label
@@ -268,6 +275,21 @@ const vector<string> & Vstr_maps::value_by_node(const Jnode &jn) const {
 }
 
 
+Vstr_maps::MapType Vstr_maps::mapped_type(size_t opt_cnt) const {
+ // return true/false if given option position maps to label or to iterator
+ for(auto & lbl_cnt: lon_)
+  if(lbl_cnt.second == opt_cnt)
+   return label;
+
+ for(auto & itr_num: ion_)
+  if(itr_num.second == opt_cnt)
+   return iter;
+
+ return neither;                                                // indicate 'not found' conditions
+}
+
+
+
 
 
 
@@ -321,7 +343,7 @@ For understanding walk-path refer to https://github.com/ldn-softdev/jtc\n");
 
  // parse options
  try { opt.parse(argc,argv); }
- catch(stdException & e)
+ catch(Getopt::stdException & e)
   { opt.usage(); return e.code() + OFF_GETOPT; }
 
  DBG().level(opt[CHR(OPT_DBG)])
@@ -340,9 +362,19 @@ For understanding walk-path refer to https://github.com/ldn-softdev/jtc\n");
            << updates << " records into " << opt[ARG_DBF].str()
            << ", table: " << tbl_name << endl;
  }
- catch(stdException &e) {
+ catch(Sqlite::stdException &e) {
   DBG(0) DOUT() << "exception raised by: " << e.where() << endl;
-  cerr << opt.prog_name() << " exception: " << e.what() << endl;
+  cerr << opt.prog_name() << " Sqlite exception: " << e.what() << endl;
+  return e.code() + OFF_JSL;
+ }
+ catch(Jnode::stdException &e) {
+  DBG(0) DOUT() << "exception raised by: " << e.where() << endl;
+  cerr << opt.prog_name() << " Jnode exception: " << e.what() << endl;
+  return e.code() + OFF_JSL;
+ }
+ catch(Json::stdException &e) {
+  DBG(0) DOUT() << "exception raised by: " << e.where() << endl;
+  cerr << opt.prog_name() << " Json exception: " << e.what() << endl;
   return e.code() + OFF_JSL;
  }
 
@@ -360,7 +392,7 @@ void post_parse(SharedResource &r) {
  opr[CHR(OPT_MAP)].bind();                                      // prepare options for remapping:
  opr[CHR(OPT_EXP)];                                             // -e, -m, -i will be moved to opr
 
- for(size_t i = 0, e = 0; i < opt.order().size(); ++i)          // move each -m and expand -M
+ for(long i = 0, e = 0; i < opt.order().size(); ++i)            // move each -m and expand -M
   switch(opt.order(i).id()) {
    case CHR(OPT_EXP): e = 1; continue;
    case CHR(OPT_MAP):
@@ -596,8 +628,11 @@ void json_callback(SharedResource &r, Sqlite &db, Vstr_maps &row, const Jnode & 
 
  size_t full_size = table_info.size() - ignored.size();
  if(row.size() > full_size) {                                   // if failed previously
-  if(node.label() != opr[CHR(OPT_MAP)].str(1))                  // wait until first label come thru
-   { DBG(1) DOUT() << "waiting for the first mapped label to come" << endl; return; }
+  if( (row.mapped_type(1) == Vstr_maps::label and node.label() != opr[CHR(OPT_MAP)].str(1))
+       or
+      (row.mapped_type(1) == Vstr_maps::iter and &node != &*r.json.itr_callbacks()[0].iter) )
+   { DBG(1) DOUT() << "waiting for the first mapped value to come" << endl; return; }
+  DBG(1) DOUT() << "discard prior inconsistent row and start over building a new one" << endl;
   row.clear();                                                  // clean up the slate and start over
  }
 
@@ -619,7 +654,7 @@ bool schema_generated(SharedResource &r, Sqlite &db, Vstr_maps &row, const Jnode
  REVEAL(r, opt, opr, ignored, DBG());
  static Vstr_maps cschema{row};                                 // static ok, given build only once
 
- if(row.value_by_node(node).empty()) {                          // otherwise it's a next row
+ if(row.value_by_node(node).empty()) {                          // otherwise it's for a next row
   update_row(r, row, node, &cschema);                           // update and build column's schema
   if(DBG()(1))
    for(const auto &type: cschema.value_by_node(node))
