@@ -392,20 +392,20 @@ void post_parse(SharedResource &r) {
  opr[CHR(OPT_MAP)].bind();                                      // prepare options for remapping:
  opr[CHR(OPT_EXP)];                                             // -e, -m, -i will be moved to opr
 
- for(long i = 0, e = 0; i < opt.order().size(); ++i)            // move each -m and expand -M
+ for(size_t i = 0, e = 1; i < opt.order().size(); ++i)          // move each -m and expand -M
   switch(opt.order(i).id()) {
-   case CHR(OPT_EXP): e = 1; continue;
+   case CHR(OPT_EXP): e = 0; continue;
    case CHR(OPT_MAP):
-    if(e-- > 0) opr[CHR(OPT_EXP)].hit();                        // insert -e if flag is raised
+    if(e++ == 0) opr[CHR(OPT_EXP)].hit();                       // insert -e if flag is raised
     opr[CHR(OPT_MAP)] = opt.order(i).str();                     // insert -m value
     continue;
    case CHR(OPT_MPS):
     for(size_t last{0}, found{0}; found != string::npos; last=found+1) {    // break up -M, move to -m
-     if(e > 0) opr[CHR(OPT_EXP)].hit();                         // insert -e if flag is raised
+     if(e == 0) opr[CHR(OPT_EXP)].hit();                        // insert -e if flag is raised
      found = opt.order(i).str().find(",", last);
      opr[CHR(OPT_MAP)] = trim_spaces(opt.order(i).str().substr(last, found-last));
     }
-    --e;
+    ++e;
   }
 
  for(size_t i = 0; i < opt.order().size(); ++i)                 // move each -i and expand -I
