@@ -3,10 +3,10 @@
 offline tool to store regular JSON structures into Sqlite3 database
 
 #### Linux and MacOS precompiled binaries are available for download:
-- [macOS 64 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-macos-64.v1.03)
-- [macOS 32 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-macos-32.v1.03)
-- [linux 64 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-linux-64.v1.03)
-- [linux 32 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-linux-32.v1.03)
+- [macOS 64 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-macos-64.v1.04)
+- [macOS 32 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-macos-32.v1.04)
+- [linux 64 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-linux-64.v1.04)
+- [linux 32 bit](https://github.com/ldn-softdev/jsl/raw/master/jsl-linux-32.v1.04)
 
 #### Compile and install instructions:
 
