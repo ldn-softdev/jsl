@@ -400,7 +400,7 @@ void post_parse(SharedResource &r) {
     opr[CHR(OPT_MAP)] = opt.order(i).str();                     // insert -m value
     continue;
    case CHR(OPT_MPS):
-    for(size_t last{0}, found{0}; found != string::npos; last=found+1) {    // break up -M, move to -m
+    for(size_t last = 0, found = 0; found != string::npos; last = found + 1) {  // break up -M
      if(e == 0) opr[CHR(OPT_EXP)].hit();                        // insert -e if flag is raised
      found = opt.order(i).str().find(",", last);
      opr[CHR(OPT_MAP)] = trim_spaces(opt.order(i).str().substr(last, found-last));
@@ -574,7 +574,7 @@ void update_row(SharedResource &r, Vstr_maps &row,
                       (node.is_number() or node.is_bool()? "NUMERIC": "TEXT") );
  }
  else {                                                         // it's iterable requiring expansion
-  string agg_column =  generate_column_name(node);
+  string agg_column = generate_column_name(node);
   for(auto &rec: node) {
    row.push(node, stringify(rec));
    if(cschema == nullptr) continue;

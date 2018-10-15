@@ -399,7 +399,6 @@ class Blob{
                            .read(reinterpret_cast<char*>(self.data()), file_size - is_pos);
                          return is;
                         }
-                         //{  while(is.rdstate()==0) self.store().push_back(is.get()); return is; }
 
                         Blob(void) = default;                   // DC
                         Blob(const Blob &) = default;           // CC

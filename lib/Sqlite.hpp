@@ -1,5 +1,5 @@
 /*
- *  Created by Dmitry Lyssenko, last modified August 27, 2018
+ *  Created by Dmitry Lyssenko
  *
  *
  * This is a simple lightweight sqlite3 wrapper (upon compiling don't forget to include
@@ -332,7 +332,7 @@ class Sqlite {
     int                 rc_{SQLITE_OK};                         // last result code
 
  private:
-    Transaction         ts_{out_of_transaction};                // 0/1/2:  out/in_nosql/in_sql
+    Transaction         ts_{out_of_transaction};                // 0/1/2: out/in_nosql/in_sql
     int                 pi_{1};                                 // parameter index
     int                 pc_{0};                                 // parameter count
     int                 ci_{0};                                 // column index
@@ -364,7 +364,7 @@ Sqlite::Sqlite(const std::string &filename, int flags) {
 
 
 Sqlite & Sqlite::open(const std::string &filename, int flags) {
- rc_ =  sqlite3_open_v2(filename.c_str(), & dbp_, flags, nullptr);
+ rc_ = sqlite3_open_v2(filename.c_str(), & dbp_, flags, nullptr);
  DBG(0)
   DOUT() << "openning file/flags: " << filename << '/' << flags
          << ", tr/rc: " << ts_ << '/' << rc_ << std::endl;

@@ -30,7 +30,7 @@
  *          cout << "All traffic-light colors:";
  *          for(int i=0; i<COUNT_ARGS(MY_COLORS); ++i)
  *           cout << ' ' << SomeClass::trafficLightColors_str[i];
- *           // or equally:  cout << ' ' << STREN(trafficLightColors, i);
+ *           // or equally: cout << ' ' << STREN(trafficLightColors, i);
  *          cout << endl;
  *
  * Obvious caveat: enums declared that way do not allow value re-definition
