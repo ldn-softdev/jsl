@@ -180,7 +180,7 @@ void Vstr_maps::book(const string &key, function<void(const Jnode &)> &&cb, size
  }
  catch(Json::stdException & e) {
   if(e.code() < Jnode::walk_offset_missing_closure) throw e;    // if failed with walk exception
-  r_.json.callback(key, move(cb));
+  r_.json.callback(key, move(cb));                              // plug lbl callback
   lbl_[key];                                                    // then it's a label
   lon_[key] = on;                                               // it's required to trace prev. opt.
   DBG(r_, 0) DOUT(r_) << "booked label based holder: " << key << endl;
